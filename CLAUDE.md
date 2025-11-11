@@ -158,6 +158,28 @@ Repository contains only source, tests, docs, and operator scripts.
 - Trade-offs need user preference
 - Assumptions could affect design
 
+### Planning Depth Guidelines
+
+**Critical**: Keep analysis and planning at the right abstraction level.
+
+See `docs/planning-guidelines.md` for complete guidelines. Quick summary:
+
+**Analysis Phase** - Focus on WHAT and WHY:
+- Requirements, design decisions, trade-offs
+- Architecture boundaries, testing strategy
+- NOT: Code snippets, exact SQL, full function signatures
+
+**Plan Phase** - Focus on task breakdown and ordering:
+- What needs to be built (high-level), dependencies, testing expectations
+- Task descriptions: 1-3 sentences per task
+- NOT: Full implementations, complete templates, line-by-line instructions
+
+**Execution Phase** - Where implementation details belong:
+- Actual code, exact APIs, specific queries
+- Planning provides direction, execution fills in details
+
+**Self-check**: If implementation phase is just "copying from plan", the plan is too detailed.
+
 ### Explanation Depth
 
 **Default Style**: Brief inline documentation + short explanation after implementation
@@ -215,3 +237,4 @@ After implementing a feature:
 **Git**: Trunk-based, short PRs, main always passes tests
 **Explanation**: Brief, focus on "why" over "what"
 **Interject**: Always flag issues/alternatives proactively
+**Planning**: See `docs/planning-guidelines.md` - focus on WHAT/WHY/WHEN, not HOW
