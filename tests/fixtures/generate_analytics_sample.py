@@ -25,42 +25,12 @@ random.seed(42)
 START_DATE = datetime(2020, 1, 1)
 END_DATE = datetime(2024, 12, 31)
 
-# Channel definitions: (name, view_count)
-CHANNEL_SPECS = [
-    # 5 channels with 1-2 views (low activity)
-    ("Low Activity Channel 1", 1),
-    ("Low Activity Channel 2", 2),
-    ("Low Activity Channel 3", 1),
-    ("Low Activity Channel 4", 2),
-    ("Low Activity Channel 5", 2),
-    # 10 channels with 3-8 views (medium activity)
-    ("Medium Activity Channel 1", 3),
-    ("Medium Activity Channel 2", 5),
-    ("Medium Activity Channel 3", 4),
-    ("Medium Activity Channel 4", 6),
-    ("Medium Activity Channel 5", 7),
-    ("Medium Activity Channel 6", 8),
-    ("Medium Activity Channel 7", 5),
-    ("Medium Activity Channel 8", 6),
-    ("Medium Activity Channel 9", 4),
-    ("Medium Activity Channel 10", 3),
-    # 10 channels with 9-15 views (high activity)
-    ("High Activity Channel 1", 9),
-    ("High Activity Channel 2", 12),
-    ("High Activity Channel 3", 10),
-    ("High Activity Channel 4", 15),
-    ("High Activity Channel 5", 11),
-    ("High Activity Channel 6", 13),
-    ("High Activity Channel 7", 14),
-    ("High Activity Channel 8", 10),
-    ("High Activity Channel 9", 12),
-    ("High Activity Channel 10", 9),
-    # 5 channels with 16-25 views (very high activity)
-    ("Very High Activity Channel 1", 16),
-    ("Very High Activity Channel 2", 20),
-    ("Very High Activity Channel 3", 25),
-    ("Very High Activity Channel 4", 18),
-    ("Very High Activity Channel 5", 22),
+# Channel distributions: (category_name, count, min_views, max_views)
+CHANNEL_DISTRIBUTIONS = [
+    ("Low Activity", 5, 1, 2),        # 5 channels, 1-2 views each
+    ("Medium Activity", 10, 3, 8),    # 10 channels, 3-8 views each
+    ("High Activity", 10, 9, 15),     # 10 channels, 9-15 views each
+    ("Very High Activity", 5, 16, 25) # 5 channels, 16-25 views each
 ]
 
 
@@ -112,35 +82,29 @@ def create_video_record(video_id: str, title: str, channel_name: str, channel_id
 def generate_records() -> list[dict]:
     """Generate all test records."""
     records = []
-    video_registry = {}  # Track videos for rewatch generation
 
-    # Generate records for each channel
-    for channel_name, total_views in CHANNEL_SPECS:
-        channel_id = generate_channel_id(channel_name)
+    # Generate channels from distributions
+    for category, count, min_views, max_views in CHANNEL_DISTRIBUTIONS:
+        for i in range(count):
+            channel_name = f"{category} Channel {i+1}"
+            channel_id = generate_channel_id(channel_name)
+            total_views = random.randint(min_views, max_views)
 
-        # Determine number of unique videos (2-5 per channel)
-        num_videos = random.randint(2, 5)
+            # Create fewer unique videos than total views
+            # This naturally creates rewatches (20-40% of views are rewatches)
+            num_unique_videos = random.randint(2, min(5, max(2, total_views - 1)))
 
-        # Create videos for this channel
-        videos = []
-        for i in range(num_videos):
-            video_id = generate_video_id()
-            title = f"{channel_name} - Video {i+1}"
-            videos.append({"video_id": video_id, "title": title})
+            # Generate unique videos for this channel
+            videos = []
+            for j in range(num_unique_videos):
+                video_id = generate_video_id()
+                title = f"{channel_name} - Video {j+1}"
+                videos.append({"video_id": video_id, "title": title})
 
-        # Distribute views across videos
-        # First, give each video at least one view
-        view_counts = [1] * num_videos
-        remaining_views = total_views - num_videos
-
-        # Distribute remaining views randomly
-        for _ in range(remaining_views):
-            video_idx = random.randint(0, num_videos - 1)
-            view_counts[video_idx] += 1
-
-        # Generate records for each video's views
-        for video, count in zip(videos, view_counts):
-            for _ in range(count):
+            # Generate views by randomly selecting from video pool
+            # Videos get rewatched naturally
+            for _ in range(total_views):
+                video = random.choice(videos)
                 timestamp = generate_timestamp()
                 record = create_video_record(
                     video["video_id"],
@@ -150,42 +114,6 @@ def generate_records() -> list[dict]:
                     timestamp
                 )
                 records.append(record)
-
-                # Register for potential rewatches
-                video_key = (video["video_id"], video["title"], channel_name, channel_id)
-                if video_key not in video_registry:
-                    video_registry[video_key] = []
-                video_registry[video_key].append(record)
-
-    # Add rewatches (20-30% of total records)
-    current_count = len(records)
-    target_rewatch_count = random.randint(int(current_count * 0.2), int(current_count * 0.3))
-
-    # Select videos to rewatch (prefer videos with more existing views)
-    rewatch_candidates = [(key, len(records_list)) for key, records_list in video_registry.items()]
-    rewatch_candidates.sort(key=lambda x: x[1], reverse=True)
-
-    # Create at least one video with 5+ rewatches
-    if rewatch_candidates:
-        popular_video = rewatch_candidates[0][0]
-        video_id, title, channel_name, channel_id = popular_video
-        for _ in range(5):
-            timestamp = generate_timestamp()
-            record = create_video_record(video_id, title, channel_name, channel_id, timestamp)
-            records.append(record)
-
-        target_rewatch_count -= 5
-
-    # Generate remaining rewatches
-    for _ in range(target_rewatch_count):
-        # Weighted random selection (favor videos with more views)
-        weights = [count for _, count in rewatch_candidates]
-        selected_key = random.choices([key for key, _ in rewatch_candidates], weights=weights, k=1)[0]
-        video_id, title, channel_name, channel_id = selected_key
-
-        timestamp = generate_timestamp()
-        record = create_video_record(video_id, title, channel_name, channel_id, timestamp)
-        records.append(record)
 
     # Add deleted videos (5-10 records)
     num_deleted = random.randint(5, 10)
@@ -208,8 +136,11 @@ def main():
 
     records = generate_records()
 
+    # Count total channels
+    total_channels = sum(count for _, count, _, _ in CHANNEL_DISTRIBUTIONS)
+
     print(f"Generated {len(records)} records")
-    print(f"  - {len(CHANNEL_SPECS)} channels")
+    print(f"  - {total_channels} channels")
     print(f"  - Date range: {START_DATE.date()} to {END_DATE.date()}")
 
     # Save to file
