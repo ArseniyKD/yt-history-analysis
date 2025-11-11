@@ -8,6 +8,13 @@ A local-only data analysis application for YouTube watch history, inspired by "S
 
 **Key Constraint**: Self-hosted only, no internet access required, no authentication needed. Must be easily deployable by others on their own datasets.
 
+## Project Versioning
+
+**V1 Scope**: Core analytics with full data re-ingest, simple UI, no API integration
+**V2 Scope**: Channel grouping, YouTube API enrichment, incremental updates, parallel instances
+
+See `docs/requirements/` for detailed requirements by persona (end user, operator, developer).
+
 ## Technical Stack
 
 - **Platform**: Linux (Arch), local deployment only
@@ -16,6 +23,14 @@ A local-only data analysis application for YouTube watch history, inspired by "S
 - **Frontend**: Server-rendered HTML + D3.js for interactive visualizations (loaded via CDN, no build step)
 - **Testing**: pytest framework with defensive assertion style
 - **Version Control**: Git with trunk-based development, short-lived feature branches
+
+## Deployment Model
+
+**Runtime location**: `~/projectDeployments/<instance_name>/` (outside repo)
+**Default instance**: "default"
+**Per-instance isolation**: Separate DB, logs, config, venv
+
+Repository contains only source, tests, docs, and operator scripts.
 
 ## Development Philosophy
 
@@ -68,6 +83,10 @@ A local-only data analysis application for YouTube watch history, inspired by "S
 - Brief inline comments for non-obvious logic
 - Short explanations after implementation (see Interaction Protocol)
 - Code should be self-documenting where possible
+
+**Code Formatting**:
+- Black for automatic formatting (default configuration)
+- Developers run Black manually before commits in V1
 
 ### Git Workflow
 
@@ -138,7 +157,7 @@ After implementing a feature:
 - Sanitized test fixtures only
 
 **Test Data**:
-- Generate synthetic YouTube watch history mimicking real structure
+- Use curated real records safe for public display (committed to repo)
 - Keep some non-sensitive examples in repo for testing
 - Real data stays local, never committed
 
