@@ -15,6 +15,20 @@ A local-only data analysis application for YouTube watch history, inspired by "S
 
 See `docs/requirements/` for detailed requirements by persona (end user, operator, developer).
 
+## Getting Started
+
+**For setup and usage instructions, see `README.md`**.
+
+Quick reference:
+```bash
+# Setup
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt && pip install -e .
+
+# Run tests
+pytest tests/ -v
+```
+
 ## Technical Stack
 
 - **Platform**: Linux (Arch), local deployment only
@@ -49,6 +63,12 @@ Repository contains only source, tests, docs, and operator scripts.
 - Test doubles/mocks following inheritance pattern
 - Backend API endpoints must be tested
 - Frontend: manual verification acceptable initially
+
+**Testing Infrastructure**:
+- Use in-memory SQLite (`:memory:`) for unit tests (fast, isolated)
+- Dependency injection for testability: core logic takes parameters, I/O at edges
+- Pure functions with clear interfaces preferred over monolithic implementations
+- Integration tests use fixtures with file-based SQLite databases
 
 ### Error Handling
 
@@ -87,6 +107,12 @@ Repository contains only source, tests, docs, and operator scripts.
 **Code Formatting**:
 - Black for automatic formatting (default configuration)
 - Developers run Black manually before commits in V1
+
+**Python Error Handling Patterns**:
+- Use `Optional[T]` for expected non-matches (e.g., filtering posts from video records)
+- Raise exceptions for actual data errors (malformed data, missing required fields)
+- Pattern: "None for not applicable, exception for data corruption"
+- Aligns with systems philosophy: exceptions for exceptional circumstances
 
 ### Git Workflow
 
