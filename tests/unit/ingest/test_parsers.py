@@ -19,7 +19,9 @@ def test_is_video_record_with_video():
 
 def test_is_video_record_with_post():
     """Test that post records are correctly identified."""
-    record = {"titleUrl": "https://www.youtube.com/post/UgkxJ9sgOk6qEOPECSGXqFaqqGdiKrgG5uJJ"}
+    record = {
+        "titleUrl": "https://www.youtube.com/post/UgkxJ9sgOk6qEOPECSGXqFaqqGdiKrgG5uJJ"
+    }
     assert is_video_record(record) is False
 
 
@@ -99,10 +101,10 @@ def test_parse_record_normal_video():
         "subtitles": [
             {
                 "name": "Test Channel",
-                "url": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw"
+                "url": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
             }
         ],
-        "time": "2025-01-15T12:30:45.123Z"
+        "time": "2025-01-15T12:30:45.123Z",
     }
 
     result = parse_record(record)
@@ -121,7 +123,7 @@ def test_parse_record_deleted_video_no_subtitles():
     record = {
         "title": "Watched https://www.youtube.com/watch?v=deletedvid",
         "titleUrl": "https://www.youtube.com/watch?v=deletedvid",
-        "time": "2017-07-22T18:19:06.589Z"
+        "time": "2017-07-22T18:19:06.589Z",
     }
 
     result = parse_record(record)
@@ -139,7 +141,7 @@ def test_parse_record_deleted_video_empty_subtitles():
         "title": "Watched Some Video",
         "titleUrl": "https://www.youtube.com/watch?v=test123",
         "subtitles": [],
-        "time": "2020-01-01T00:00:00.000Z"
+        "time": "2020-01-01T00:00:00.000Z",
     }
 
     result = parse_record(record)
@@ -158,10 +160,10 @@ def test_parse_record_post_returns_none():
         "subtitles": [
             {
                 "name": "Linus Tech Tips",
-                "url": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw"
+                "url": "https://www.youtube.com/channel/UCXuqSBlHAE6Xw-yeJA0Tunw",
             }
         ],
-        "time": "2025-08-01T23:57:08.949Z"
+        "time": "2025-08-01T23:57:08.949Z",
     }
 
     result = parse_record(record)
@@ -170,10 +172,7 @@ def test_parse_record_post_returns_none():
 
 def test_parse_record_missing_title_url():
     """Test that missing titleUrl returns None (not a video)."""
-    record = {
-        "title": "Watched Some Video",
-        "time": "2020-01-01T00:00:00.000Z"
-    }
+    record = {"title": "Watched Some Video", "time": "2020-01-01T00:00:00.000Z"}
 
     result = parse_record(record)
     assert result is None
@@ -183,7 +182,7 @@ def test_parse_record_missing_title():
     """Test that missing title raises ValueError."""
     record = {
         "titleUrl": "https://www.youtube.com/watch?v=test123",
-        "time": "2020-01-01T00:00:00.000Z"
+        "time": "2020-01-01T00:00:00.000Z",
     }
 
     with pytest.raises(ValueError, match="Missing title field"):
@@ -194,7 +193,7 @@ def test_parse_record_missing_timestamp():
     """Test that missing timestamp raises ValueError."""
     record = {
         "title": "Watched Some Video",
-        "titleUrl": "https://www.youtube.com/watch?v=test123"
+        "titleUrl": "https://www.youtube.com/watch?v=test123",
     }
 
     with pytest.raises(ValueError, match="Missing time field"):

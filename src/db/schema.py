@@ -21,25 +21,30 @@ def init_schema(conn: sqlite3.Connection) -> None:
     cursor = conn.cursor()
 
     # Create channels table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS channels (
             channel_id TEXT PRIMARY KEY,
             channel_name TEXT NOT NULL
         )
-    """)
+    """
+    )
 
     # Create videos table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS videos (
             video_id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             channel_id TEXT NOT NULL,
             FOREIGN KEY (channel_id) REFERENCES channels(channel_id)
         )
-    """)
+    """
+    )
 
     # Create views table (denormalized channel_id for query performance)
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS views (
             view_id INTEGER PRIMARY KEY AUTOINCREMENT,
             video_id TEXT NOT NULL,
@@ -48,29 +53,39 @@ def init_schema(conn: sqlite3.Connection) -> None:
             FOREIGN KEY (video_id) REFERENCES videos(video_id),
             FOREIGN KEY (channel_id) REFERENCES channels(channel_id)
         )
-    """)
+    """
+    )
 
     # Create indexes for query optimization
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_views_channel
         ON views(channel_id)
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_views_channel_timestamp
         ON views(channel_id, timestamp)
-    """)
+    """
+    )
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_views_timestamp
         ON views(timestamp)
-    """)
+    """
+    )
 
     # Insert sentinel channel (if not exists)
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT OR IGNORE INTO channels (channel_id, channel_name)
         VALUES (?, ?)
-    """, (SENTINEL_CHANNEL_ID, SENTINEL_CHANNEL_NAME))
+    """,
+        (SENTINEL_CHANNEL_ID, SENTINEL_CHANNEL_NAME),
+    )
 
     conn.commit()
 

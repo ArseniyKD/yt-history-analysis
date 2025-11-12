@@ -55,7 +55,7 @@ def test_ingest_records_with_deleted_video(db_conn):
         {
             "title": "Watched https://www.youtube.com/watch?v=deletedvid",
             "titleUrl": "https://www.youtube.com/watch?v=deletedvid",
-            "time": "2017-07-22T18:19:06.589Z"
+            "time": "2017-07-22T18:19:06.589Z",
         }
     ]
 
@@ -66,9 +66,11 @@ def test_ingest_records_with_deleted_video(db_conn):
 
     # Verify sentinel channel was used
     cursor = db_conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT channel_id FROM views WHERE video_id = 'deletedvid'
-    """)
+    """
+    )
     channel_id = cursor.fetchone()[0]
     assert channel_id == SENTINEL_CHANNEL_ID
 
@@ -79,15 +81,25 @@ def test_ingest_records_with_duplicate_videos(db_conn):
         {
             "title": "Watched Test Video",
             "titleUrl": "https://www.youtube.com/watch?v=test123",
-            "subtitles": [{"name": "Test Channel", "url": "https://www.youtube.com/channel/UCtest123"}],
-            "time": "2024-01-01T10:00:00.000Z"
+            "subtitles": [
+                {
+                    "name": "Test Channel",
+                    "url": "https://www.youtube.com/channel/UCtest123",
+                }
+            ],
+            "time": "2024-01-01T10:00:00.000Z",
         },
         {
             "title": "Watched Test Video",
             "titleUrl": "https://www.youtube.com/watch?v=test123",
-            "subtitles": [{"name": "Test Channel", "url": "https://www.youtube.com/channel/UCtest123"}],
-            "time": "2024-01-02T15:30:00.000Z"
-        }
+            "subtitles": [
+                {
+                    "name": "Test Channel",
+                    "url": "https://www.youtube.com/channel/UCtest123",
+                }
+            ],
+            "time": "2024-01-02T15:30:00.000Z",
+        },
     ]
 
     stats = ingest_records(db_conn, records)
@@ -110,8 +122,13 @@ def test_ingest_records_filters_posts(db_conn):
         {
             "title": "Viewed A fantastic day with fellow tech creators!",
             "titleUrl": "https://www.youtube.com/post/UgkxJ9sgOk6qEOPECSGXqFaqqGdiKrgG5uJJ",
-            "subtitles": [{"name": "Linus Tech Tips", "url": "https://www.youtube.com/channel/UCtest"}],
-            "time": "2025-08-01T23:57:08.949Z"
+            "subtitles": [
+                {
+                    "name": "Linus Tech Tips",
+                    "url": "https://www.youtube.com/channel/UCtest",
+                }
+            ],
+            "time": "2025-08-01T23:57:08.949Z",
         }
     ]
 
@@ -135,8 +152,13 @@ def test_ingest_records_denormalizes_channel_id(db_conn):
         {
             "title": "Watched Test Video",
             "titleUrl": "https://www.youtube.com/watch?v=test123",
-            "subtitles": [{"name": "Test Channel", "url": "https://www.youtube.com/channel/UCtest"}],
-            "time": "2024-01-01T10:00:00.000Z"
+            "subtitles": [
+                {
+                    "name": "Test Channel",
+                    "url": "https://www.youtube.com/channel/UCtest",
+                }
+            ],
+            "time": "2024-01-01T10:00:00.000Z",
         }
     ]
 
@@ -162,14 +184,16 @@ def test_ingest_records_rollback_on_error(db_conn):
         {
             "title": "Watched Valid Video",
             "titleUrl": "https://www.youtube.com/watch?v=valid123",
-            "subtitles": [{"name": "Test", "url": "https://www.youtube.com/channel/UCtest"}],
-            "time": "2024-01-01T10:00:00.000Z"
+            "subtitles": [
+                {"name": "Test", "url": "https://www.youtube.com/channel/UCtest"}
+            ],
+            "time": "2024-01-01T10:00:00.000Z",
         },
         {
             "title": "Watched Invalid",
             "titleUrl": "https://www.youtube.com/watch?v=invalid",
             # Missing time field - will cause error
-        }
+        },
     ]
 
     # Should raise ValueError from missing timestamp
