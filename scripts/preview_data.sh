@@ -15,6 +15,20 @@ JSON_FILE="$1"
 TEMP_DB="preview_temp.db"
 PORT=8000
 
+# Get script directory and repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Activate virtual environment
+VENV_PATH="$REPO_ROOT/venv"
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH"
+    echo "Please run: python -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    exit 1
+fi
+
+source "$VENV_PATH/bin/activate"
+
 # Cleanup function to run on exit
 cleanup() {
     echo ""
