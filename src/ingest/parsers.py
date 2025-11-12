@@ -32,7 +32,7 @@ def clean_title(title: str) -> str:
     VIDEO_PREFIX = "Watched "
 
     if title.startswith(VIDEO_PREFIX):
-        return title[len(VIDEO_PREFIX):]
+        return title[len(VIDEO_PREFIX) :]
 
     # If we see "Viewed", posts weren't filtered properly
     if title.startswith("Viewed "):
@@ -62,7 +62,9 @@ def extract_video_id(url: str) -> str:
     video_ids = query_params.get("v", [])
 
     if len(video_ids) != 1:
-        raise ValueError(f"Expected exactly one video ID, found {len(video_ids)}: {url}")
+        raise ValueError(
+            f"Expected exactly one video ID, found {len(video_ids)}: {url}"
+        )
 
     return video_ids[0]
 

@@ -19,26 +19,41 @@ def db_path(tmp_path):
         {
             "title": "Watched Video 1",
             "titleUrl": "https://www.youtube.com/watch?v=vid1",
-            "subtitles": [{"name": "Channel A", "url": "https://www.youtube.com/channel/UCchannelA"}],
-            "time": "2024-01-01T10:00:00.000Z"
+            "subtitles": [
+                {
+                    "name": "Channel A",
+                    "url": "https://www.youtube.com/channel/UCchannelA",
+                }
+            ],
+            "time": "2024-01-01T10:00:00.000Z",
         },
         {
             "title": "Watched Video 2",
             "titleUrl": "https://www.youtube.com/watch?v=vid2",
-            "subtitles": [{"name": "Channel B", "url": "https://www.youtube.com/channel/UCchannelB"}],
-            "time": "2024-01-05T15:30:00.000Z"
+            "subtitles": [
+                {
+                    "name": "Channel B",
+                    "url": "https://www.youtube.com/channel/UCchannelB",
+                }
+            ],
+            "time": "2024-01-05T15:30:00.000Z",
         },
         {
             "title": "Watched Video 1",  # Rewatch
             "titleUrl": "https://www.youtube.com/watch?v=vid1",
-            "subtitles": [{"name": "Channel A", "url": "https://www.youtube.com/channel/UCchannelA"}],
-            "time": "2024-01-10T20:00:00.000Z"
+            "subtitles": [
+                {
+                    "name": "Channel A",
+                    "url": "https://www.youtube.com/channel/UCchannelA",
+                }
+            ],
+            "time": "2024-01-10T20:00:00.000Z",
         },
         {
             "title": "Watched https://www.youtube.com/watch?v=deleted",
             "titleUrl": "https://www.youtube.com/watch?v=deleted",
-            "time": "2024-01-15T12:00:00.000Z"
-        }
+            "time": "2024-01-15T12:00:00.000Z",
+        },
     ]
 
     ingest_records(conn, test_records)
@@ -61,7 +76,7 @@ def empty_db_path(tmp_path):
 def client(db_path):
     """Create Flask test client with test database."""
     app = create_app(db_path, debug=False, verbose=False)
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
@@ -70,26 +85,28 @@ def client(db_path):
 def empty_client(empty_db_path):
     """Create Flask test client with empty database."""
     app = create_app(empty_db_path, debug=False, verbose=False)
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
 
 def test_index_with_data(client):
     """Test index endpoint returns overview data."""
-    response = client.get('/')
+    response = client.get("/")
 
     assert response.status_code == 200
-    assert b'Dataset Overview' in response.data or b'overview' in response.data.lower()
+    assert b"Dataset Overview" in response.data or b"overview" in response.data.lower()
 
     # Check that data is present (exact formatting depends on template)
-    assert b'2024' in response.data  # Year should appear in dates
-    assert b'4' in response.data or b'3' in response.data  # Total views or unique videos
+    assert b"2024" in response.data  # Year should appear in dates
+    assert (
+        b"4" in response.data or b"3" in response.data
+    )  # Total views or unique videos
 
 
 def test_index_with_empty_db(empty_client):
     """Test index endpoint handles empty database gracefully."""
-    response = empty_client.get('/')
+    response = empty_client.get("/")
 
     assert response.status_code == 200
     # Should not crash - rendering with None/0 values
@@ -97,17 +114,17 @@ def test_index_with_empty_db(empty_client):
 
 def test_channels_default_params(client):
     """Test channels endpoint with default parameters."""
-    response = client.get('/channels')
+    response = client.get("/channels")
 
     assert response.status_code == 200
-    assert b'Channel A' in response.data or b'Channel B' in response.data
+    assert b"Channel A" in response.data or b"Channel B" in response.data
     # Default should exclude deleted videos
-    assert b'Deleted Videos' not in response.data
+    assert b"Deleted Videos" not in response.data
 
 
 def test_channels_custom_limit(client):
     """Test channels endpoint with custom limit parameter."""
-    response = client.get('/channels?limit=1')
+    response = client.get("/channels?limit=1")
 
     assert response.status_code == 200
     # Should return successfully with limit=1
@@ -115,40 +132,40 @@ def test_channels_custom_limit(client):
 
 def test_channels_include_deleted_true(client):
     """Test channels endpoint includes deleted videos when requested."""
-    response = client.get('/channels?include_deleted=true')
+    response = client.get("/channels?include_deleted=true")
 
     assert response.status_code == 200
     # Should include deleted videos channel
-    assert b'Deleted/Private Videos' in response.data
+    assert b"Deleted/Private Videos" in response.data
 
 
 def test_channels_include_deleted_false(client):
     """Test channels endpoint excludes deleted videos by default."""
-    response = client.get('/channels?include_deleted=false')
+    response = client.get("/channels?include_deleted=false")
 
     assert response.status_code == 200
     # Should NOT include deleted videos
-    assert b'Deleted/Private Videos' not in response.data
+    assert b"Deleted/Private Videos" not in response.data
 
 
 def test_channels_limit_bounds_checking(client):
     """Test channels endpoint enforces limit bounds (1-1000)."""
     # Test upper bound
-    response = client.get('/channels?limit=9999')
+    response = client.get("/channels?limit=9999")
     assert response.status_code == 200  # Should clamp to 1000, not crash
 
     # Test lower bound
-    response = client.get('/channels?limit=0')
+    response = client.get("/channels?limit=0")
     assert response.status_code == 200  # Should clamp to 1, not crash
 
     # Test negative
-    response = client.get('/channels?limit=-5')
+    response = client.get("/channels?limit=-5")
     assert response.status_code == 200  # Should clamp to 1, not crash
 
 
 def test_channels_empty_db(empty_client):
     """Test channels endpoint handles empty database gracefully."""
-    response = empty_client.get('/channels')
+    response = empty_client.get("/channels")
 
     assert response.status_code == 200
     # Should not crash with empty results
@@ -156,9 +173,9 @@ def test_channels_empty_db(empty_client):
 
 def test_channels_form_state_preservation(client):
     """Test that channels page preserves form state in template context."""
-    response = client.get('/channels?limit=25&include_deleted=true')
+    response = client.get("/channels?limit=25&include_deleted=true")
 
     assert response.status_code == 200
     # The template should have access to current_limit and include_deleted
     # for form state preservation (exact rendering depends on template)
-    assert b'25' in response.data or b'checked' in response.data
+    assert b"25" in response.data or b"checked" in response.data

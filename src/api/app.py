@@ -34,10 +34,10 @@ def get_db_connection():
 
 
 # Module-level app instance for decorator syntax
-app = Flask(__name__, template_folder='../frontend/templates')
+app = Flask(__name__, template_folder="../frontend/templates")
 
 
-@app.route('/')
+@app.route("/")
 def index():
     """
     Landing page showing dataset summary statistics.
@@ -58,10 +58,10 @@ def index():
     finally:
         conn.close()
 
-    return render_template('index.html', overview=overview_data)
+    return render_template("index.html", overview=overview_data)
 
 
-@app.route('/channels', methods=['GET'])
+@app.route("/channels", methods=["GET"])
 def channels():
     """
     Top channels page with configurable filtering.
@@ -71,11 +71,11 @@ def channels():
         - include_deleted: 'true' to include deleted videos (default: false)
     """
     # Parse and validate query parameters
-    limit = int(request.args.get('limit', 10))
+    limit = int(request.args.get("limit", 10))
     limit = max(1, min(limit, 1000))  # Bounds check
 
-    include_deleted_param = request.args.get('include_deleted', 'false').lower()
-    include_deleted = include_deleted_param == 'true'
+    include_deleted_param = request.args.get("include_deleted", "false").lower()
+    include_deleted = include_deleted_param == "true"
 
     logger.debug(f"Channels request: limit={limit}, include_deleted={include_deleted}")
 
@@ -87,7 +87,7 @@ def channels():
 
         # Add channel URLs to each channel
         for channel in top_channels:
-            channel['channel_url'] = get_channel_url(channel['channel_id'])
+            channel["channel_url"] = get_channel_url(channel["channel_id"])
 
     except Exception as e:
         logger.error(f"Query execution failed: {e}")
@@ -98,10 +98,12 @@ def channels():
     finally:
         conn.close()
 
-    return render_template('channels.html',
-                          channels=top_channels,
-                          current_limit=limit,
-                          include_deleted=include_deleted)
+    return render_template(
+        "channels.html",
+        channels=top_channels,
+        current_limit=limit,
+        include_deleted=include_deleted,
+    )
 
 
 def create_app(db_path: str, debug: bool = False, verbose: bool = False):
@@ -123,25 +125,32 @@ def create_app(db_path: str, debug: bool = False, verbose: bool = False):
     # Configure logging level based on verbose flag
     log_level = logging.DEBUG if verbose else logging.WARNING
     logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        level=log_level, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     )
 
     # Configure Flask debug mode
-    app.config['DEBUG'] = debug
+    app.config["DEBUG"] = debug
 
     return app
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='YouTube Watch History Analysis Web Server')
-    parser.add_argument('--db', required=True, help='Path to SQLite database')
-    parser.add_argument('--port', type=int, default=8000, help='Port number (default: 8000)')
-    parser.add_argument('--debug', action='store_true',
-                       help='Enable Flask debug mode and breakpoint() on errors')
-    parser.add_argument('--verbose', action='store_true',
-                       help='Enable verbose logging (DEBUG level)')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="YouTube Watch History Analysis Web Server"
+    )
+    parser.add_argument("--db", required=True, help="Path to SQLite database")
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Port number (default: 8000)"
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable Flask debug mode and breakpoint() on errors",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Enable verbose logging (DEBUG level)"
+    )
     args = parser.parse_args()
 
     application = create_app(args.db, debug=args.debug, verbose=args.verbose)
-    application.run(host='127.0.0.1', port=args.port, debug=args.debug)
+    application.run(host="127.0.0.1", port=args.port, debug=args.debug)

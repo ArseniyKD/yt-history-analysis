@@ -61,9 +61,13 @@ def get_dataset_overview(db_conn: sqlite3.Connection) -> dict:
         first_view = None
         last_view = None
         if row[0]:
-            first_view = datetime.fromisoformat(row[0].replace('Z', '+00:00')).strftime('%Y-%m-%d')
+            first_view = datetime.fromisoformat(row[0].replace("Z", "+00:00")).strftime(
+                "%Y-%m-%d"
+            )
         if row[1]:
-            last_view = datetime.fromisoformat(row[1].replace('Z', '+00:00')).strftime('%Y-%m-%d')
+            last_view = datetime.fromisoformat(row[1].replace("Z", "+00:00")).strftime(
+                "%Y-%m-%d"
+            )
 
         result = {
             "first_view": first_view,
@@ -73,8 +77,10 @@ def get_dataset_overview(db_conn: sqlite3.Connection) -> dict:
             "unique_channels": row[4],
         }
 
-        logger.debug(f"Retrieved overview: {result['total_views']} views, "
-                    f"{result['first_view']} to {result['last_view']}")
+        logger.debug(
+            f"Retrieved overview: {result['total_views']} views, "
+            f"{result['first_view']} to {result['last_view']}"
+        )
 
         return result
 
@@ -83,9 +89,9 @@ def get_dataset_overview(db_conn: sqlite3.Connection) -> dict:
         raise
 
 
-def get_top_channels(db_conn: sqlite3.Connection,
-                     limit: int,
-                     include_deleted: bool = False) -> list[dict]:
+def get_top_channels(
+    db_conn: sqlite3.Connection, limit: int, include_deleted: bool = False
+) -> list[dict]:
     """
     Get top N channels ranked by total view count.
 
@@ -135,18 +141,24 @@ def get_top_channels(db_conn: sqlite3.Connection,
             first_view = None
             last_view = None
             if row[4]:
-                first_view = datetime.fromisoformat(row[4].replace('Z', '+00:00')).strftime('%Y-%m')
+                first_view = datetime.fromisoformat(
+                    row[4].replace("Z", "+00:00")
+                ).strftime("%Y-%m")
             if row[5]:
-                last_view = datetime.fromisoformat(row[5].replace('Z', '+00:00')).strftime('%Y-%m')
+                last_view = datetime.fromisoformat(
+                    row[5].replace("Z", "+00:00")
+                ).strftime("%Y-%m")
 
-            results.append({
-                "channel_id": row[0],
-                "channel_name": row[1],
-                "total_views": row[2],
-                "unique_videos": row[3],
-                "first_view": first_view,
-                "last_view": last_view,
-            })
+            results.append(
+                {
+                    "channel_id": row[0],
+                    "channel_name": row[1],
+                    "total_views": row[2],
+                    "unique_videos": row[3],
+                    "first_view": first_view,
+                    "last_view": last_view,
+                }
+            )
 
         logger.debug(f"Retrieved {len(results)} channels")
 

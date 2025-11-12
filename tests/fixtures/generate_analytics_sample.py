@@ -27,10 +27,10 @@ END_DATE = datetime(2024, 12, 31)
 
 # Channel distributions: (category_name, count, min_views, max_views)
 CHANNEL_DISTRIBUTIONS = [
-    ("Low Activity", 5, 1, 2),        # 5 channels, 1-2 views each
-    ("Medium Activity", 10, 3, 8),    # 10 channels, 3-8 views each
-    ("High Activity", 10, 9, 15),     # 10 channels, 9-15 views each
-    ("Very High Activity", 5, 16, 25) # 5 channels, 16-25 views each
+    ("Low Activity", 5, 1, 2),  # 5 channels, 1-2 views each
+    ("Medium Activity", 10, 3, 8),  # 10 channels, 3-8 views each
+    ("High Activity", 10, 9, 15),  # 10 channels, 9-15 views each
+    ("Very High Activity", 5, 16, 25),  # 5 channels, 16-25 views each
 ]
 
 
@@ -57,8 +57,14 @@ def generate_timestamp() -> str:
     return timestamp.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
-def create_video_record(video_id: str, title: str, channel_name: str, channel_id: str,
-                        timestamp: str, is_deleted: bool = False) -> dict:
+def create_video_record(
+    video_id: str,
+    title: str,
+    channel_name: str,
+    channel_id: str,
+    timestamp: str,
+    is_deleted: bool = False,
+) -> dict:
     """Create a YouTube history record."""
     record = {
         "header": "YouTube",
@@ -66,15 +72,17 @@ def create_video_record(video_id: str, title: str, channel_name: str, channel_id
         "titleUrl": f"https://www.youtube.com/watch?v={video_id}",
         "time": timestamp,
         "products": ["YouTube"],
-        "activityControls": ["YouTube watch history"]
+        "activityControls": ["YouTube watch history"],
     }
 
     # Add channel info unless video is deleted
     if not is_deleted:
-        record["subtitles"] = [{
-            "name": channel_name,
-            "url": f"https://www.youtube.com/channel/{channel_id}"
-        }]
+        record["subtitles"] = [
+            {
+                "name": channel_name,
+                "url": f"https://www.youtube.com/channel/{channel_id}",
+            }
+        ]
 
     return record
 
@@ -111,7 +119,7 @@ def generate_records() -> list[dict]:
                     video["title"],
                     channel_name,
                     channel_id,
-                    timestamp
+                    timestamp,
                 )
                 records.append(record)
 
@@ -121,7 +129,9 @@ def generate_records() -> list[dict]:
         video_id = generate_video_id()
         title = f"Deleted Video {i+1}"
         timestamp = generate_timestamp()
-        record = create_video_record(video_id, title, "", "", timestamp, is_deleted=True)
+        record = create_video_record(
+            video_id, title, "", "", timestamp, is_deleted=True
+        )
         records.append(record)
 
     # Sort by timestamp (newest first, matching typical export order)
