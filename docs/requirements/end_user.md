@@ -62,6 +62,11 @@ End user persona focuses on interaction with YouTube watch history data for anal
 - New vs returning channels year-over-year
 - Tracks exploration patterns vs comfort viewing
 
+### Most Rewatched Videos
+- Global most rewatched videos (ranked by rewatch count)
+- Per-year most rewatched videos
+- Display video title, channel name, total views, rewatch count
+
 ## Deferred Beyond V2
 
 ### Medium Priority
