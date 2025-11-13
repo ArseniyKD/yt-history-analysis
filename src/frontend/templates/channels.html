@@ -4,110 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Watch History - Top Channels</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            max-width: 1200px;
-        }
-
-        h1, h2 {
-            color: #333;
-        }
-
-        nav {
-            margin: 20px 0;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-        }
-
-        nav a {
-            margin-right: 20px;
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        nav a:hover {
-            text-decoration: underline;
-        }
-
-        .controls {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-        }
-
-        .controls label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        .controls select {
-            padding: 5px;
-            font-size: 14px;
-        }
-
-        .controls button {
-            padding: 6px 15px;
-            font-size: 14px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .controls button:hover {
-            background-color: #0056b3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        tr:hover {
-            background-color: #f0f0f0;
-        }
-
-        .rank-column {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .number-column {
-            text-align: right;
-        }
-
-        .channel-link {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .channel-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>YouTube Watch History - Top Channels</h1>
@@ -115,6 +12,7 @@
     <nav>
         <a href="/">Overview</a>
         <a href="/channels">Top Channels</a>
+        <a href="/years">Per-Year Analysis</a>
     </nav>
 
     <h2>Top Channels</h2>
@@ -147,6 +45,7 @@
                 <th>Channel Name</th>
                 <th class="number-column">Total Views</th>
                 <th class="number-column">Unique Videos</th>
+                <th class="number-column">Watched 2+ Times</th>
                 <th>First View</th>
                 <th>Last View</th>
             </tr>
@@ -166,6 +65,7 @@
                 </td>
                 <td class="number-column">{{ channel.total_views }}</td>
                 <td class="number-column">{{ channel.unique_videos }}</td>
+                <td class="number-column">{{ channel.rewatches }}</td>
                 <td>{{ channel.first_view }}</td>
                 <td>{{ channel.last_view }}</td>
             </tr>

@@ -34,7 +34,12 @@ def get_db_connection():
 
 
 # Module-level app instance for decorator syntax
-app = Flask(__name__, template_folder="../frontend/templates")
+app = Flask(
+    __name__,
+    template_folder="../frontend/templates",
+    static_folder="../frontend/static",
+    static_url_path="/static",
+)
 
 
 @app.route("/")
