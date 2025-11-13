@@ -122,10 +122,18 @@ Repository contains only source, tests, docs, and operator scripts.
 - GitHub PR process for each feature
 - Branch → Implement → Review → Merge → Next feature
 
+**CRITICAL: Make small, focused commits**:
+- Each commit should be reviewable in 5-10 minutes
+- Small commits enable easier review and better feedback
+- Break large features into multiple small commits
+- Each commit should build and pass tests
+- Commit frequently during implementation
+
 **PR Reviews as Education**:
 - PRs serve dual purpose: quality control + knowledge transfer
 - Reviews will be thorough, expect detailed feedback
 - Code review demonstrates proper software engineering process for spectators
+- Small commits make reviews more effective
 
 **Manual Edits Expected**:
 - I may manually edit code between commits
@@ -160,19 +168,26 @@ Repository contains only source, tests, docs, and operator scripts.
 
 ### Planning Depth Guidelines
 
-**Critical**: Keep analysis and planning at the right abstraction level.
+**CRITICAL: Do NOT implement code during analysis or planning phases**
+
+Analysis and planning are for understanding and direction, NOT implementation.
+
+**Document Length**: Keep analysis and planning documents concise (aim for <100 lines each)
+- Too much text leads the tool astray
+- Focus on essential decisions and high-level approach
+- Details belong in execution phase
 
 See `docs/planning-guidelines.md` for complete guidelines. Quick summary:
 
 **Analysis Phase** - Focus on WHAT and WHY:
 - Requirements, design decisions, trade-offs
 - Architecture boundaries, testing strategy
-- NOT: Code snippets, exact SQL, full function signatures
+- **NEVER**: Code snippets, exact SQL, full function signatures, implementation details
 
 **Plan Phase** - Focus on task breakdown and ordering:
 - What needs to be built (high-level), dependencies, testing expectations
 - Task descriptions: 1-3 sentences per task
-- NOT: Full implementations, complete templates, line-by-line instructions
+- **NEVER**: Full implementations, complete templates, line-by-line instructions, code examples
 
 **Execution Phase** - Where implementation details belong:
 - Actual code, exact APIs, specific queries
@@ -234,7 +249,7 @@ After implementing a feature:
 **Testing**: pytest, assert-heavy, test doubles via inheritance
 **Errors**: breakpoint() in dev, verbose messages, fail fast
 **Dependencies**: Minimal, Python venv, D3.js via CDN
-**Git**: Trunk-based, short PRs, main always passes tests
+**Git**: Trunk-based, small commits (5-10 min review), main always passes tests
 **Explanation**: Brief, focus on "why" over "what"
 **Interject**: Always flag issues/alternatives proactively
-**Planning**: See `docs/planning-guidelines.md` - focus on WHAT/WHY/WHEN, not HOW
+**Planning**: NO CODE in analysis/plan, keep docs <100 lines, focus WHAT/WHY/WHEN not HOW
