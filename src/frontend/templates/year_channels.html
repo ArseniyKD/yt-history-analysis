@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Watch History - Top Channels</title>
+    <title>YouTube Watch History - Top Channels for {{ year }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>YouTube Watch History - Top Channels</h1>
+    <h1>YouTube Watch History - Top Channels for {{ year }}</h1>
 
     <nav>
         <a href="/">Overview</a>
@@ -16,11 +16,18 @@
         <a href="/year-channels">Per-Year Channels</a>
     </nav>
 
-    <h2>Top Channels</h2>
+    <h2>Top Channels for {{ year }}</h2>
 
     <div class="controls">
-        <form method="GET" action="/channels">
-            <label for="limit">Show top:</label>
+        <form method="GET" action="/year-channels">
+            <label for="year">Year:</label>
+            <select name="year" id="year">
+                {% for y in available_years %}
+                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="limit" style="margin-left: 20px;">Show top:</label>
             <select name="limit" id="limit">
                 <option value="10" {% if current_limit == 10 %}selected{% endif %}>10</option>
                 <option value="20" {% if current_limit == 20 %}selected{% endif %}>20</option>
@@ -74,7 +81,7 @@
         </tbody>
     </table>
     {% else %}
-    <p>No channels to display.</p>
+    <p>No channels to display for {{ year }}.</p>
     {% endif %}
 
     <footer>

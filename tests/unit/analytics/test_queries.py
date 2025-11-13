@@ -5,7 +5,16 @@ import sqlite3
 
 from src.db.schema import init_schema
 from src.ingest.pipeline import load_json_file, ingest_records
-from src.analytics.queries import get_dataset_overview, get_top_channels
+from src.analytics.queries import (
+    get_dataset_overview,
+    get_top_channels,
+    get_dataset_date_range,
+    get_total_rewatches,
+    get_channel_rewatches,
+    get_year_rewatches,
+    get_per_year_summary,
+    get_top_channels_for_year,
+)
 from src.constants import SENTINEL_CHANNEL_NAME, SENTINEL_CHANNEL_ID
 
 
@@ -42,6 +51,7 @@ def test_dataset_overview_normal(analytics_db):
     assert result["total_views"] > 0
     assert result["unique_videos"] > 0
     assert result["unique_channels"] > 0
+    assert result["total_rewatches"] >= 0
     assert result["first_view"] is not None
     assert result["last_view"] is not None
 
@@ -63,6 +73,7 @@ def test_dataset_overview_empty_database(empty_db):
     assert result["total_views"] == 0
     assert result["unique_videos"] == 0
     assert result["unique_channels"] == 0
+    assert result["total_rewatches"] == 0
     assert result["first_view"] is None
     assert result["last_view"] is None
 
@@ -255,3 +266,313 @@ def test_top_channels_limit_larger_than_count(analytics_db):
     expected_count = cursor.fetchone()[0]
 
     assert len(channels) == expected_count
+
+
+def test_top_channels_includes_rewatches(analytics_db):
+    """Test that top channels include rewatches field."""
+    channels = get_top_channels(analytics_db, limit=10)
+
+    assert len(channels) > 0
+    for channel in channels:
+        assert "rewatches" in channel
+        assert channel["rewatches"] >= 0
+
+
+# Dataset Date Range Tests
+
+
+def test_dataset_date_range_normal(analytics_db):
+    """Test dataset date range with normal data."""
+    from datetime import datetime
+
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+
+    assert first_dt is not None
+    assert last_dt is not None
+    assert isinstance(first_dt, datetime)
+    assert isinstance(last_dt, datetime)
+    assert first_dt <= last_dt
+
+
+def test_dataset_date_range_empty(empty_db):
+    """Test dataset date range with empty database."""
+    first_dt, last_dt = get_dataset_date_range(empty_db)
+
+    assert first_dt is None
+    assert last_dt is None
+
+
+# Rewatch Tests
+
+
+def test_total_rewatches_normal(analytics_db):
+    """Test total rewatches with normal data."""
+    count = get_total_rewatches(analytics_db)
+
+    assert count >= 0
+    # Should be less than or equal to total unique videos
+    cursor = analytics_db.cursor()
+    cursor.execute("SELECT COUNT(DISTINCT video_id) FROM views")
+    unique_videos = cursor.fetchone()[0]
+    assert count <= unique_videos
+
+
+def test_total_rewatches_empty(empty_db):
+    """Test total rewatches with empty database."""
+    count = get_total_rewatches(empty_db)
+    assert count == 0
+
+
+def test_total_rewatches_no_rewatches(empty_db):
+    """Test total rewatches when all videos watched once."""
+    cursor = empty_db.cursor()
+
+    # Insert test channel
+    cursor.execute(
+        "INSERT INTO channels (channel_id, channel_name) VALUES (?, ?)",
+        ("TEST", "Test Channel"),
+    )
+
+    # Insert 5 videos, each watched once
+    for i in range(5):
+        cursor.execute(
+            "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+            (f"vid{i}", f"Video {i}", "TEST"),
+        )
+        cursor.execute(
+            "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+            (f"vid{i}", "TEST", f"2024-01-0{i+1}T00:00:00Z"),
+        )
+    empty_db.commit()
+
+    count = get_total_rewatches(empty_db)
+    assert count == 0
+
+
+def test_total_rewatches_with_rewatches(empty_db):
+    """Test total rewatches when some videos watched multiple times."""
+    cursor = empty_db.cursor()
+
+    # Insert test channel
+    cursor.execute(
+        "INSERT INTO channels (channel_id, channel_name) VALUES (?, ?)",
+        ("TEST", "Test Channel"),
+    )
+
+    # Insert video watched 3 times
+    cursor.execute(
+        "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+        ("vid1", "Video 1", "TEST"),
+    )
+    for i in range(3):
+        cursor.execute(
+            "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+            ("vid1", "TEST", f"2024-01-0{i+1}T00:00:00Z"),
+        )
+
+    # Insert video watched twice
+    cursor.execute(
+        "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+        ("vid2", "Video 2", "TEST"),
+    )
+    for i in range(2):
+        cursor.execute(
+            "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+            ("vid2", "TEST", f"2024-02-0{i+1}T00:00:00Z"),
+        )
+
+    # Insert video watched once
+    cursor.execute(
+        "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+        ("vid3", "Video 3", "TEST"),
+    )
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("vid3", "TEST", "2024-03-01T00:00:00Z"),
+    )
+
+    empty_db.commit()
+
+    # Should count 2 videos as rewatched (vid1 and vid2), not 3 total extra views
+    count = get_total_rewatches(empty_db)
+    assert count == 2
+
+
+def test_channel_rewatches_normal(analytics_db):
+    """Test channel rewatches with normal data."""
+    # Get first channel from top channels
+    channels = get_top_channels(analytics_db, limit=1)
+    assert len(channels) == 1
+
+    channel_id = channels[0]["channel_id"]
+    count = get_channel_rewatches(analytics_db, channel_id)
+
+    assert count >= 0
+
+
+def test_channel_rewatches_with_year_filter(analytics_db):
+    """Test channel rewatches with year filter."""
+    channels = get_top_channels(analytics_db, limit=1)
+    assert len(channels) == 1
+
+    channel_id = channels[0]["channel_id"]
+
+    # Get rewatches for 2023
+    count_2023 = get_channel_rewatches(analytics_db, channel_id, year=2023)
+    assert count_2023 >= 0
+
+    # Total rewatches should be >= any single year
+    count_total = get_channel_rewatches(analytics_db, channel_id)
+    assert count_total >= count_2023
+
+
+def test_year_rewatches_normal(analytics_db):
+    """Test year rewatches with normal data."""
+    # Get a year from the dataset
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+
+    year = first_dt.year
+    count = get_year_rewatches(analytics_db, year)
+
+    assert count >= 0
+
+
+# Per-Year Summary Tests
+
+
+def test_per_year_summary_normal(analytics_db):
+    """Test per-year summary with normal data."""
+    summary = get_per_year_summary(analytics_db)
+
+    assert len(summary) > 0
+
+    # Verify structure of each year entry
+    for year_data in summary:
+        assert "year" in year_data
+        assert "total_views" in year_data
+        assert "unique_videos" in year_data
+        assert "unique_channels" in year_data
+        assert "rewatches" in year_data
+        assert "first_view" in year_data
+        assert "last_view" in year_data
+
+        assert year_data["total_views"] >= 0
+        assert year_data["unique_videos"] >= 0
+        assert year_data["unique_channels"] >= 0
+        assert year_data["rewatches"] >= 0
+
+    # Verify ordering (most recent first)
+    for i in range(len(summary) - 1):
+        assert summary[i]["year"] > summary[i + 1]["year"]
+
+
+def test_per_year_summary_empty(empty_db):
+    """Test per-year summary with empty database."""
+    summary = get_per_year_summary(empty_db)
+    assert len(summary) == 0
+
+
+def test_per_year_summary_year_range(analytics_db):
+    """Test that per-year summary covers full year range."""
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+    assert last_dt is not None
+
+    min_year = first_dt.year
+    max_year = last_dt.year
+    expected_years = list(range(min_year, max_year + 1))
+
+    summary = get_per_year_summary(analytics_db)
+    actual_years = [y["year"] for y in summary]
+
+    assert sorted(actual_years) == sorted(expected_years)
+
+
+# Top Channels for Year Tests
+
+
+def test_top_channels_for_year_normal(analytics_db):
+    """Test top channels for year with normal data."""
+    # Get a year from the dataset
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+
+    year = first_dt.year
+    channels = get_top_channels_for_year(analytics_db, year, limit=10)
+
+    assert len(channels) >= 0
+
+    # Verify structure
+    for channel in channels:
+        assert "channel_id" in channel
+        assert "channel_name" in channel
+        assert "total_views" in channel
+        assert "unique_videos" in channel
+        assert "rewatches" in channel
+        assert "first_view" in channel
+        assert "last_view" in channel
+
+        assert channel["total_views"] > 0
+        assert channel["unique_videos"] > 0
+        assert channel["rewatches"] >= 0
+
+    # Verify ordering (descending by views)
+    for i in range(len(channels) - 1):
+        assert channels[i]["total_views"] >= channels[i + 1]["total_views"]
+
+
+def test_top_channels_for_year_exclude_deleted(analytics_db):
+    """Test that deleted videos are excluded by default for year filtering."""
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+
+    year = first_dt.year
+    channels = get_top_channels_for_year(
+        analytics_db, year, limit=100, include_deleted=False
+    )
+
+    # Sentinel channel should NOT be in results
+    for channel in channels:
+        assert channel["channel_id"] != SENTINEL_CHANNEL_ID
+
+
+def test_top_channels_for_year_include_deleted(analytics_db):
+    """Test that deleted videos are included when include_deleted=True for year filtering."""
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+
+    year = last_dt.year  # Use most recent year for better chance of deleted videos
+    channels = get_top_channels_for_year(
+        analytics_db, year, limit=100, include_deleted=True
+    )
+
+    # Check if sentinel channel exists in this year
+    cursor = analytics_db.cursor()
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM views
+        WHERE channel_id = ? AND strftime('%Y', timestamp) = ?
+    """,
+        (SENTINEL_CHANNEL_ID, str(year)),
+    )
+    deleted_count_in_year = cursor.fetchone()[0]
+
+    if deleted_count_in_year > 0:
+        # Sentinel channel MUST be in results if it has views in this year
+        channel_ids = [ch["channel_id"] for ch in channels]
+        assert SENTINEL_CHANNEL_ID in channel_ids
+    # else: if no deleted videos in this year, test still passes
+
+
+def test_top_channels_for_year_limit_respected(analytics_db):
+    """Test that limit parameter is respected for year filtering."""
+    first_dt, last_dt = get_dataset_date_range(analytics_db)
+    assert first_dt is not None
+
+    year = first_dt.year
+
+    for limit in [5, 10, 20]:
+        channels = get_top_channels_for_year(analytics_db, year, limit=limit)
+        assert len(channels) <= limit
