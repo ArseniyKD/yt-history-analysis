@@ -56,20 +56,32 @@ HTML is generated server-side and sent as complete pages. User interactions trig
 **Template Structure**:
 ```
 src/frontend/templates/
-├── index.html      # Dataset overview
-└── channels.html   # Top channels with filtering
+├── index.html         # Dataset overview
+├── channels.html      # Top channels with filtering
+├── years.html         # Per-year summary
+└── year_channels.html # Year-filtered channel view
 ```
 
 **Template Features**:
 - Jinja2 conditionals for empty states
 - Form state preservation (selected values)
 - Loop constructs for table rows
-- Inline CSS (no external stylesheet dependencies)
+- Shared external CSS file (`src/frontend/static/style.css`) for consistent styling
 
 **Interactivity via Forms**:
 - HTML forms with GET method (bookmarkable URLs)
 - Server processes query params, re-renders with new data
 - Browser history and bookmarks work naturally
+
+**Page Creation Strategy**:
+- **Create a new page** for each distinct analysis or view
+  - Example: Overview, Top Channels, Per-Year Summary, Per-Year Channels are separate pages
+  - Rationale: Each represents a different way to explore the data
+- **Extend an existing page** only when the new feature is a close logical extension
+  - Example: Adding a "limit" dropdown to an existing channels table
+  - Counter-example: Year-filtered channels is NOT an extension of global channels (separate page)
+- **Navigation**: All major pages should be accessible from consistent navigation bar
+- **URL structure**: Each page gets its own route, filters via query parameters
 
 **Future JavaScript (D3.js)**:
 - Load D3.js from CDN (no build step)
