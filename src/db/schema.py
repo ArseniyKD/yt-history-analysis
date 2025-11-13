@@ -78,6 +78,13 @@ def init_schema(conn: sqlite3.Connection) -> None:
     """
     )
 
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_views_year
+        ON views(strftime('%Y', timestamp))
+    """
+    )
+
     # Insert sentinel channel (if not exists)
     cursor.execute(
         """
