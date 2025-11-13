@@ -13,6 +13,7 @@
         <a href="/">Overview</a>
         <a href="/channels">Top Channels</a>
         <a href="/years">Per-Year Analysis</a>
+        <a href="/year-channels">Per-Year Channels</a>
     </nav>
 
     <div class="overview-panel">
@@ -29,5 +30,9 @@
         <p>No data available in database.</p>
         {% endif %}
     </div>
+
+    <footer>
+        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
+    </footer>
 </body>
 </html>
