@@ -57,6 +57,7 @@ def test_init_schema_creates_indexes(db_conn):
         "idx_views_channel",
         "idx_views_channel_timestamp",
         "idx_views_timestamp",
+        "idx_views_year",
     ]
     assert indexes == expected
 

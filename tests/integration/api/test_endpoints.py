@@ -179,3 +179,113 @@ def test_channels_form_state_preservation(client):
     # The template should have access to current_limit and include_deleted
     # for form state preservation (exact rendering depends on template)
     assert b"25" in response.data or b"checked" in response.data
+
+
+def test_years_with_data(client):
+    """Test years endpoint returns per-year summary data."""
+    response = client.get("/years")
+
+    assert response.status_code == 200
+    assert b"Per-Year" in response.data or b"per-year" in response.data.lower()
+    assert b"2024" in response.data  # Year should appear in table
+
+
+def test_years_empty_db(empty_client):
+    """Test years endpoint handles empty database gracefully."""
+    response = empty_client.get("/years")
+
+    assert response.status_code == 200
+    # Should not crash with empty results
+
+
+def test_year_channels_default_year(client):
+    """Test year-channels endpoint with no year parameter (should use most recent)."""
+    response = client.get("/year-channels")
+
+    assert response.status_code == 200
+    assert b"2024" in response.data  # Should default to most recent year (2024)
+    assert b"Channel A" in response.data or b"Channel B" in response.data
+
+
+def test_year_channels_specific_year(client):
+    """Test year-channels endpoint with specific year parameter."""
+    response = client.get("/year-channels?year=2024")
+
+    assert response.status_code == 200
+    assert b"2024" in response.data
+    assert b"Channel A" in response.data or b"Channel B" in response.data
+
+
+def test_year_channels_out_of_range_year(client):
+    """Test year-channels endpoint with out-of-range year (should default to most recent)."""
+    response = client.get("/year-channels?year=2030")
+
+    assert response.status_code == 200
+    # Should default to 2024 (most recent year in data)
+    assert b"2024" in response.data
+
+
+def test_year_channels_invalid_year(client):
+    """Test year-channels endpoint with invalid year parameter (should default to most recent)."""
+    response = client.get("/year-channels?year=invalid")
+
+    assert response.status_code == 200
+    # Should default to 2024 (most recent year in data)
+    assert b"2024" in response.data
+
+
+def test_year_channels_with_limit(client):
+    """Test year-channels endpoint with custom limit parameter."""
+    response = client.get("/year-channels?year=2024&limit=1")
+
+    assert response.status_code == 200
+    # Should return successfully with limit=1
+
+
+def test_year_channels_include_deleted(client):
+    """Test year-channels endpoint with include_deleted parameter."""
+    response = client.get("/year-channels?year=2024&include_deleted=true")
+
+    assert response.status_code == 200
+    # Should include deleted videos channel if any exist in that year
+    assert b"Deleted/Private Videos" in response.data
+
+
+def test_year_channels_empty_db(empty_client):
+    """Test year-channels endpoint returns 404 for empty database."""
+    response = empty_client.get("/year-channels")
+
+    assert response.status_code == 404
+    # Empty database should return 404
+
+
+def test_processing_time_in_index(client):
+    """Test that processing time is displayed on index page."""
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
+
+
+def test_processing_time_in_channels(client):
+    """Test that processing time is displayed on channels page."""
+    response = client.get("/channels")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
+
+
+def test_processing_time_in_years(client):
+    """Test that processing time is displayed on years page."""
+    response = client.get("/years")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
+
+
+def test_processing_time_in_year_channels(client):
+    """Test that processing time is displayed on year-channels page."""
+    response = client.get("/year-channels")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
