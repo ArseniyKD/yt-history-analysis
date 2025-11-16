@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}YouTube Watch History - Monthly Trends{% endblock %}
+
+{% block extra_head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{% endblock %}
+
+{% block heading %}YouTube Watch History - Monthly Trends{% endblock %}
+
+{% block content %}
+<h2>Monthly View Counts</h2>
+
+    <div class="controls">
+        <button onclick="document.getElementById('data-table').scrollIntoView({behavior: 'smooth'})">
+            Jump to Table
+        </button>
+    </div>
+
+    <div class="chart-container">
+        <svg id="chart" width="800" height="400"></svg>
+    </div>
+
+    <h3 id="data-table">Monthly Data</h3>
+
+    {% if monthly_data %}
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th class="number-column">Views</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in monthly_data %}
+            <tr>
+                <td>{{ row.month }}</td>
+                <td class="number-column">{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+<p>No data available.</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if monthly_data %}
+<script>
+    // Pass data from backend to frontend
+    const monthlyData = {{ monthly_data | tojson }};
+</script>
+<script src="{{ url_for('static', filename='temporal.js') }}"></script>
+{% endif %}
+{% endblock %}

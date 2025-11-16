@@ -1,56 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Watch History - Per-Year Analysis</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>YouTube Watch History - Per-Year Analysis</h1>
+{% extends "base.html" %}
 
-    <nav>
-        <a href="/">Overview</a>
-        <a href="/channels">Top Channels</a>
-        <a href="/years">Per-Year Analysis</a>
-        <a href="/year-channels">Per-Year Channels</a>
-    </nav>
+{% block title %}YouTube Watch History - Per-Year Analysis{% endblock %}
 
-    <h2>Per-Year Summary</h2>
+{% block heading %}YouTube Watch History - Per-Year Analysis{% endblock %}
 
-    {% if years %}
-    <table>
-        <thead>
-            <tr>
-                <th>Year</th>
-                <th class="number-column">Total Views</th>
-                <th class="number-column">Unique Videos</th>
-                <th class="number-column">Unique Channels</th>
-                <th class="number-column">Videos Watched 2+ Times</th>
-                <th>Date Range</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for year_data in years %}
-            <tr>
-                <td>
-                    <a href="/year-channels?year={{ year_data.year }}">{{ year_data.year }}</a>
-                </td>
-                <td class="number-column">{{ year_data.total_views }}</td>
-                <td class="number-column">{{ year_data.unique_videos }}</td>
-                <td class="number-column">{{ year_data.unique_channels }}</td>
-                <td class="number-column">{{ year_data.rewatches }}</td>
-                <td>{{ year_data.first_view }} to {{ year_data.last_view }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No data available.</p>
-    {% endif %}
+{% block content %}
+<h2>Per-Year Summary</h2>
 
-    <footer>
-        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
-    </footer>
-</body>
-</html>
+{% if years %}
+<table>
+    <thead>
+        <tr>
+            <th>Year</th>
+            <th class="number-column">Total Views</th>
+            <th class="number-column">Unique Videos</th>
+            <th class="number-column">Unique Channels</th>
+            <th class="number-column">Videos Watched 2+ Times</th>
+            <th>Date Range</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for year_data in years %}
+        <tr>
+            <td>
+                <a href="/year-channels?year={{ year_data.year }}">{{ year_data.year }}</a>
+            </td>
+            <td class="number-column">{{ year_data.total_views }}</td>
+            <td class="number-column">{{ year_data.unique_videos }}</td>
+            <td class="number-column">{{ year_data.unique_channels }}</td>
+            <td class="number-column">{{ year_data.rewatches }}</td>
+            <td>{{ year_data.first_view }} to {{ year_data.last_view }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No data available.</p>
+{% endif %}
+{% endblock %}

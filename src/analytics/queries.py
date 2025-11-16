@@ -217,6 +217,33 @@ def get_dataset_date_range(
         raise
 
 
+def _generate_month_range(first_dt: datetime, last_dt: datetime) -> list[str]:
+    """
+    Generate complete list of year-month strings between two dates.
+
+    Args:
+        first_dt: Start datetime (inclusive)
+        last_dt: End datetime (inclusive)
+
+    Returns:
+        List of month strings in YYYY-MM format, ordered DESC (most recent first)
+    """
+    months = []
+    current_year = last_dt.year
+    current_month = last_dt.month
+
+    while (current_year > first_dt.year) or (
+        current_year == first_dt.year and current_month >= first_dt.month
+    ):
+        months.append(f"{current_year:04d}-{current_month:02d}")
+        current_month -= 1
+        if current_month == 0:
+            current_month = 12
+            current_year -= 1
+
+    return months
+
+
 def _count_rewatches(
     db_conn: sqlite3.Connection, channel_id: str | None = None, year: int | None = None
 ) -> int:
@@ -414,6 +441,132 @@ def get_per_year_summary(db_conn: sqlite3.Connection) -> list[dict]:
 
     logger.debug(f"Retrieved summary for {len(results)} years")
     return results
+
+
+def get_monthly_view_counts(db_conn: sqlite3.Connection) -> list[dict]:
+    """
+    Get view counts aggregated by month (year-month combination).
+
+    Fills gaps with zero counts for months with no views.
+
+    Returns:
+        List of dicts, each containing:
+            - month: str (YYYY-MM format)
+            - count: int (number of views in that month)
+
+        Ordered by month DESC (reverse chronological, most recent first).
+        Returns empty list if database is empty.
+    """
+    logger.debug("get_monthly_view_counts()")
+
+    # Get date range
+    first_dt, last_dt = get_dataset_date_range(db_conn)
+    if first_dt is None or last_dt is None:
+        logger.debug("Empty database, returning empty list")
+        return []
+
+    # Query for months with actual data
+    query = """
+        SELECT
+            strftime('%Y-%m', timestamp) as month,
+            COUNT(*) as count
+        FROM views
+        GROUP BY month
+        ORDER BY month DESC
+    """
+
+    try:
+        cursor = db_conn.cursor()
+        cursor.execute(query)
+        query_results = cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Query failed: {e}")
+        raise
+
+    # Generate complete month list and merge with query results
+    complete_months = _generate_month_range(first_dt, last_dt)
+    results = []
+    query_index = 0
+
+    for expected_month in complete_months:
+        if (
+            query_index < len(query_results)
+            and query_results[query_index][0] == expected_month
+        ):
+            results.append(
+                {"month": expected_month, "count": query_results[query_index][1]}
+            )
+            query_index += 1
+        else:
+            results.append({"month": expected_month, "count": 0})
+
+    logger.debug(f"Retrieved {len(results)} months ({len(query_results)} with data)")
+    return results
+
+
+def get_videos_for_month(
+    db_conn: sqlite3.Connection, year: int, month: int
+) -> list[dict]:
+    """
+    Get all videos watched in a specific month.
+
+    Args:
+        db_conn: SQLite database connection
+        year: Year (e.g., 2024)
+        month: Month (1-12)
+
+    Returns:
+        List of dicts, each containing:
+            - timestamp: str (ISO format)
+            - video_id: str
+            - title: str
+            - channel_id: str
+            - channel_name: str
+
+        Ordered by timestamp ASC (chronological order within month).
+        Returns empty list if no videos in that month.
+    """
+    logger.debug(f"get_videos_for_month(year={year}, month={month})")
+
+    # Format as YYYY-MM for comparison
+    year_month = f"{year:04d}-{month:02d}"
+
+    query = """
+        SELECT
+            v.timestamp,
+            v.video_id,
+            vid.title,
+            v.channel_id,
+            c.channel_name
+        FROM views v
+        JOIN videos vid ON v.video_id = vid.video_id
+        JOIN channels c ON v.channel_id = c.channel_id
+        WHERE strftime('%Y-%m', v.timestamp) = ?
+        ORDER BY v.timestamp ASC
+    """
+
+    try:
+        cursor = db_conn.cursor()
+        cursor.execute(query, (year_month,))
+        rows = cursor.fetchall()
+
+        results = [
+            {
+                "timestamp": row[0],
+                "video_id": row[1],
+                "title": row[2],
+                "channel_id": row[3],
+                "channel_name": row[4],
+            }
+            for row in rows
+        ]
+
+        logger.debug(f"Retrieved {len(results)} videos for {year_month}")
+        return results
+
+    except Exception as e:
+        logger.error(f"Query failed for {year_month}: {e}")
+        raise
 
 
 def get_top_channels_for_year(

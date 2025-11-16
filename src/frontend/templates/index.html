@@ -1,38 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Watch History - Overview</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>YouTube Watch History Overview</h1>
+{% extends "base.html" %}
 
-    <nav>
-        <a href="/">Overview</a>
-        <a href="/channels">Top Channels</a>
-        <a href="/years">Per-Year Analysis</a>
-        <a href="/year-channels">Per-Year Channels</a>
-    </nav>
+{% block title %}YouTube Watch History - Overview{% endblock %}
 
-    <div class="overview-panel">
-        <h2>Dataset Summary</h2>
-        {% if overview and overview.total_views > 0 %}
-        <ul>
-            <li><strong>Time Span:</strong> {{ overview.first_view }} to {{ overview.last_view }}</li>
-            <li><strong>Total Views:</strong> {{ overview.total_views }}</li>
-            <li><strong>Unique Videos:</strong> {{ overview.unique_videos }}</li>
-            <li><strong>Unique Channels:</strong> {{ overview.unique_channels }}</li>
-            <li><strong>Videos Watched 2+ Times:</strong> {{ overview.total_rewatches }}</li>
-        </ul>
-        {% else %}
-        <p>No data available in database.</p>
-        {% endif %}
-    </div>
+{% block heading %}YouTube Watch History Overview{% endblock %}
 
-    <footer>
-        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
-    </footer>
-</body>
-</html>
+{% block content %}
+<div class="overview-panel">
+    <h2>Dataset Summary</h2>
+    {% if overview and overview.total_views > 0 %}
+    <ul>
+        <li><strong>Time Span:</strong> {{ overview.first_view }} to {{ overview.last_view }}</li>
+        <li><strong>Total Views:</strong> {{ overview.total_views }}</li>
+        <li><strong>Unique Videos:</strong> {{ overview.unique_videos }}</li>
+        <li><strong>Unique Channels:</strong> {{ overview.unique_channels }}</li>
+        <li><strong>Videos Watched 2+ Times:</strong> {{ overview.total_rewatches }}</li>
+    </ul>
+    {% else %}
+    <p>No data available in database.</p>
+    {% endif %}
+</div>
+{% endblock %}
