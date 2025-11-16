@@ -99,6 +99,12 @@ Repository contains only source, tests, docs, and operator scripts.
 - Defer optimization until necessary
 - Clear, straightforward solutions over clever code
 
+**Refactoring Duplication**:
+- Tolerate duplication initially for development velocity
+- Refactor when duplication becomes maintenance burden (typically 5-6 instances)
+- Do refactoring in separate commit after feature commits
+- Example: Template nav-bar duplication refactored after 6th page
+
 **Documentation**:
 - Brief inline comments for non-obvious logic
 - Short explanations after implementation (see Interaction Protocol)

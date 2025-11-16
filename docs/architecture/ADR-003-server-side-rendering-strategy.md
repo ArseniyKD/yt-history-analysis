@@ -128,11 +128,12 @@ src/frontend/templates/
 - No clear benefit for analytics dashboard use case
 - Makes deployment significantly more complex
 
-**D3.js integration** (deferred to Iteration 3):
-- Will load from CDN: `<script src="https://d3js.org/d3.v7.min.js"></script>`
+**D3.js integration** (implemented in Iteration 3, 2025-11-16):
+- Loaded from CDN: `<script src="https://d3js.org/d3.v7.min.js"></script>`
 - No build step required, just include script tag
 - SSR provides fallback tables if JavaScript disabled
 - Demonstrates hybrid approach: SSR foundation + progressive JavaScript enhancement
+- Implementation: See ADR-008 for detailed integration decisions
 
 **V2 considerations**:
 - If real-time updates needed (unlikely for historical data), could add:
