@@ -148,6 +148,34 @@ def years():
     )
 
 
+@app.route("/temporal")
+def temporal():
+    """
+    Monthly trends page showing view counts aggregated by month.
+    """
+    start_time = time.time()
+    logger.debug("Temporal request")
+
+    # Execute query
+    conn = get_db_connection()
+    try:
+        monthly_data = queries.get_monthly_view_counts(conn)
+        logger.debug(f"Retrieved {len(monthly_data)} months of data")
+    except Exception as e:
+        logger.error(f"Query execution failed: {e}")
+        if DEBUG_MODE:
+            breakpoint()
+        conn.close()
+        raise
+    finally:
+        conn.close()
+
+    processing_time = time.time() - start_time
+    return render_template(
+        "temporal.html", monthly_data=monthly_data, processing_time=processing_time
+    )
+
+
 @app.route("/year-channels")
 def year_channels():
     """

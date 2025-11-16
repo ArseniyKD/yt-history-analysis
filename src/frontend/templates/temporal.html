@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Watch History - Monthly Trends</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>YouTube Watch History - Monthly Trends</h1>
+
+    <nav>
+        <a href="/">Overview</a>
+        <a href="/channels">Top Channels</a>
+        <a href="/years">Per-Year Analysis</a>
+        <a href="/year-channels">Per-Year Channels</a>
+        <a href="/temporal">Monthly Trends</a>
+    </nav>
+
+    <h2>Monthly View Counts</h2>
+
+    <div class="chart-container">
+        <svg id="chart" width="800" height="400"></svg>
+    </div>
+
+    <div class="controls">
+        <button onclick="document.getElementById('data-table').scrollIntoView({behavior: 'smooth'})">
+            Jump to Table
+        </button>
+    </div>
+
+    <h3 id="data-table">Monthly Data</h3>
+
+    {% if monthly_data %}
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th class="number-column">Views</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in monthly_data %}
+            <tr>
+                <td>{{ row.month }}</td>
+                <td class="number-column">{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No data available.</p>
+    {% endif %}
+
+    <footer>
+        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
+    </footer>
+</body>
+</html>

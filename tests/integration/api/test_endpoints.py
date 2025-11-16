@@ -289,3 +289,29 @@ def test_processing_time_in_year_channels(client):
 
     assert response.status_code == 200
     assert b"generated" in response.data.lower() or b"Page" in response.data
+
+
+def test_temporal_with_data(client):
+    """Test temporal endpoint returns monthly trend data."""
+    response = client.get("/temporal")
+
+    assert response.status_code == 200
+    assert b"Monthly" in response.data or b"monthly" in response.data.lower()
+    # Should have month data (2024-01 format)
+    assert b"2024-01" in response.data
+
+
+def test_temporal_empty_db(empty_client):
+    """Test temporal endpoint handles empty database gracefully."""
+    response = empty_client.get("/temporal")
+
+    assert response.status_code == 200
+    # Should not crash with empty results
+
+
+def test_processing_time_in_temporal(client):
+    """Test that processing time is displayed on temporal page."""
+    response = client.get("/temporal")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
