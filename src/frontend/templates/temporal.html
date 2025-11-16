@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Watch History - Monthly Trends</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <h1>YouTube Watch History - Monthly Trends</h1>
@@ -20,14 +21,14 @@
 
     <h2>Monthly View Counts</h2>
 
-    <div class="chart-container">
-        <svg id="chart" width="800" height="400"></svg>
-    </div>
-
     <div class="controls">
         <button onclick="document.getElementById('data-table').scrollIntoView({behavior: 'smooth'})">
             Jump to Table
         </button>
+    </div>
+
+    <div class="chart-container">
+        <svg id="chart" width="800" height="400"></svg>
     </div>
 
     <h3 id="data-table">Monthly Data</h3>
@@ -56,5 +57,13 @@
     <footer>
         <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
     </footer>
+
+    {% if monthly_data %}
+    <script>
+        // Pass data from backend to frontend
+        const monthlyData = {{ monthly_data | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='temporal.js') }}"></script>
+    {% endif %}
 </body>
 </html>
