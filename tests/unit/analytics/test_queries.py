@@ -15,6 +15,7 @@ from src.analytics.queries import (
     get_per_year_summary,
     get_top_channels_for_year,
     get_monthly_view_counts,
+    get_videos_for_month,
     _generate_month_range,
 )
 from src.constants import SENTINEL_CHANNEL_NAME, SENTINEL_CHANNEL_ID
@@ -737,3 +738,134 @@ def test_monthly_view_counts_multiple_views_per_month(empty_db):
     assert len(results) == 1
     assert results[0]["month"] == "2024-01"
     assert results[0]["count"] == 3
+
+
+# Month Drill-Down Tests
+
+
+def test_videos_for_month_normal(analytics_db):
+    """Test get videos for month with normal data."""
+    # Get a month from the dataset
+    monthly_counts = get_monthly_view_counts(analytics_db)
+    assert len(monthly_counts) > 0
+
+    # Pick first month (most recent)
+    test_month = monthly_counts[0]["month"]
+    year, month = test_month.split("-")
+
+    results = get_videos_for_month(analytics_db, int(year), int(month))
+
+    assert len(results) > 0
+
+    # Verify structure
+    for video in results:
+        assert "timestamp" in video
+        assert "video_id" in video
+        assert "title" in video
+        assert "channel_id" in video
+        assert "channel_name" in video
+
+        assert isinstance(video["timestamp"], str)
+        assert isinstance(video["video_id"], str)
+        assert isinstance(video["title"], str)
+        assert isinstance(video["channel_id"], str)
+        assert isinstance(video["channel_name"], str)
+
+    # Verify chronological ordering
+    for i in range(len(results) - 1):
+        assert results[i]["timestamp"] <= results[i + 1]["timestamp"]
+
+
+def test_videos_for_month_empty(empty_db):
+    """Test get videos for month with empty database."""
+    results = get_videos_for_month(empty_db, 2024, 1)
+    assert results == []
+
+
+def test_videos_for_month_no_videos_in_month(empty_db):
+    """Test get videos for month when no videos exist in that month."""
+    cursor = empty_db.cursor()
+
+    # Insert test data for March 2024
+    cursor.execute(
+        "INSERT INTO channels (channel_id, channel_name) VALUES (?, ?)",
+        ("TEST", "Test Channel"),
+    )
+    cursor.execute(
+        "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+        ("vid1", "Video 1", "TEST"),
+    )
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("vid1", "TEST", "2024-03-15T00:00:00Z"),
+    )
+    empty_db.commit()
+
+    # Query for January (no data)
+    results = get_videos_for_month(empty_db, 2024, 1)
+    assert results == []
+
+
+def test_videos_for_month_chronological_order(empty_db):
+    """Test that videos are returned in chronological order."""
+    cursor = empty_db.cursor()
+
+    # Insert test channel and videos
+    cursor.execute(
+        "INSERT INTO channels (channel_id, channel_name) VALUES (?, ?)",
+        ("TEST", "Test Channel"),
+    )
+    for i in range(3):
+        cursor.execute(
+            "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+            (f"vid{i}", f"Video {i}", "TEST"),
+        )
+
+    # Insert views out of order
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("vid0", "TEST", "2024-01-20T00:00:00Z"),
+    )
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("vid1", "TEST", "2024-01-05T00:00:00Z"),
+    )
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("vid2", "TEST", "2024-01-15T00:00:00Z"),
+    )
+    empty_db.commit()
+
+    results = get_videos_for_month(empty_db, 2024, 1)
+
+    # Should be ordered chronologically
+    assert len(results) == 3
+    assert results[0]["video_id"] == "vid1"  # Jan 5
+    assert results[1]["video_id"] == "vid2"  # Jan 15
+    assert results[2]["video_id"] == "vid0"  # Jan 20
+
+
+def test_videos_for_month_includes_ids(empty_db):
+    """Test that video and channel IDs are included for URL construction."""
+    cursor = empty_db.cursor()
+
+    # Insert test data
+    cursor.execute(
+        "INSERT INTO channels (channel_id, channel_name) VALUES (?, ?)",
+        ("CHAN123", "Test Channel"),
+    )
+    cursor.execute(
+        "INSERT INTO videos (video_id, title, channel_id) VALUES (?, ?, ?)",
+        ("VID456", "Test Video", "CHAN123"),
+    )
+    cursor.execute(
+        "INSERT INTO views (video_id, channel_id, timestamp) VALUES (?, ?, ?)",
+        ("VID456", "CHAN123", "2024-01-15T00:00:00Z"),
+    )
+    empty_db.commit()
+
+    results = get_videos_for_month(empty_db, 2024, 1)
+
+    assert len(results) == 1
+    assert results[0]["video_id"] == "VID456"
+    assert results[0]["channel_id"] == "CHAN123"
