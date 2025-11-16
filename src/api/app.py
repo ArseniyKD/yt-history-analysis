@@ -27,6 +27,17 @@ def get_channel_url(channel_id: str) -> str | None:
     return f"https://www.youtube.com/channel/{channel_id}"
 
 
+def get_video_url(video_id: str) -> str | None:
+    """
+    Construct YouTube video URL from video ID.
+
+    Returns None for deleted videos (no valid video_id).
+    """
+    if not video_id or video_id == "deleted":
+        return None
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
 def get_db_connection():
     """Get database connection with Row factory for dict-like access."""
     conn = sqlite3.connect(DB_PATH)
@@ -173,6 +184,120 @@ def temporal():
     processing_time = time.time() - start_time
     return render_template(
         "temporal.html", monthly_data=monthly_data, processing_time=processing_time
+    )
+
+
+@app.route("/month-views")
+def month_views():
+    """
+    Monthly views page showing all views for a specific month.
+
+    Query parameters:
+        - year: Year to filter by (optional, defaults to most recent month)
+        - month: Month to filter by (1-12) (optional, defaults to most recent month)
+    """
+    from datetime import datetime
+
+    start_time = time.time()
+
+    # Get date range from dataset to determine valid range and default
+    conn = get_db_connection()
+    try:
+        first_dt, last_dt = queries.get_dataset_date_range(conn)
+    except Exception as e:
+        logger.error(f"Failed to get dataset date range: {e}")
+        if DEBUG_MODE:
+            breakpoint()
+        conn.close()
+        raise
+
+    # Handle empty database
+    if first_dt is None or last_dt is None:
+        conn.close()
+        return "No data available in database", 404
+
+    # Default to most recent month
+    default_year = last_dt.year
+    default_month = last_dt.month
+
+    # Parse year parameter
+    year = default_year
+    year_param = request.args.get("year")
+    if year_param:
+        try:
+            year = int(year_param)
+        except ValueError:
+            logger.warning(f"Invalid year: {year_param}, using default {default_year}")
+            year = default_year
+
+    # Parse month parameter
+    month = default_month
+    month_param = request.args.get("month")
+    if month_param:
+        try:
+            month = int(month_param)
+        except ValueError:
+            logger.warning(
+                f"Invalid month: {month_param}, using default {default_month}"
+            )
+            month = default_month
+
+    # Validate month is 1-12
+    if month < 1 or month > 12:
+        logger.warning(
+            f"Month {month} out of range (1-12), using default {default_month}"
+        )
+        month = default_month
+
+    # Validate year/month is within dataset range
+    requested_date = datetime(year, month, 1)
+    first_month = datetime(first_dt.year, first_dt.month, 1)
+    last_month = datetime(last_dt.year, last_dt.month, 1)
+
+    if requested_date < first_month or requested_date > last_month:
+        logger.warning(
+            f"Requested {year}-{month:02d} out of dataset range "
+            f"({first_dt.year}-{first_dt.month:02d} to {last_dt.year}-{last_dt.month:02d}), "
+            f"using default {default_year}-{default_month:02d}"
+        )
+        year = default_year
+        month = default_month
+
+    logger.debug(f"Month-views request: year={year}, month={month}")
+
+    # Execute query
+    try:
+        views = queries.get_videos_for_month(conn, year, month)
+        logger.debug(f"Retrieved {len(views)} views for {year}-{month:02d}")
+
+        # Add URLs to each view
+        for view in views:
+            view["video_url"] = get_video_url(view["video_id"])
+            view["channel_url"] = get_channel_url(view["channel_id"])
+
+    except Exception as e:
+        logger.error(f"Query execution failed: {e}")
+        if DEBUG_MODE:
+            breakpoint()
+        conn.close()
+        raise
+    finally:
+        conn.close()
+
+    # Build year range for dropdown
+    min_year = first_dt.year
+    max_year = last_dt.year
+    available_years = list(range(min_year, max_year + 1))
+    available_years.reverse()  # Most recent first
+
+    processing_time = time.time() - start_time
+    return render_template(
+        "month_views.html",
+        year=year,
+        month=month,
+        views=views,
+        available_years=available_years,
+        processing_time=processing_time,
     )
 
 

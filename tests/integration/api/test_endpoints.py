@@ -315,3 +315,54 @@ def test_processing_time_in_temporal(client):
 
     assert response.status_code == 200
     assert b"generated" in response.data.lower() or b"Page" in response.data
+
+
+def test_month_views_default_month(client):
+    """Test month-views endpoint defaults to most recent month."""
+    response = client.get("/month-views")
+
+    assert response.status_code == 200
+    assert b"Views" in response.data or b"views" in response.data.lower()
+    # Should have 2024-01 in the page (most recent month from test data)
+    assert b"2024-01" in response.data
+
+
+def test_month_views_specific_month(client):
+    """Test month-views endpoint with specific year/month parameters."""
+    response = client.get("/month-views?year=2024&month=1")
+
+    assert response.status_code == 200
+    assert b"2024-01" in response.data
+
+
+def test_month_views_out_of_range_month(client):
+    """Test month-views endpoint with out-of-range month (should default)."""
+    response = client.get("/month-views?year=2024&month=13")
+
+    assert response.status_code == 200
+    # Should default to most recent month
+    assert b"2024-01" in response.data
+
+
+def test_month_views_out_of_dataset_range(client):
+    """Test month-views endpoint with date outside dataset range (should default)."""
+    response = client.get("/month-views?year=2030&month=5")
+
+    assert response.status_code == 200
+    # Should default to most recent month
+    assert b"2024-01" in response.data
+
+
+def test_month_views_empty_db(empty_client):
+    """Test month-views endpoint returns 404 for empty database."""
+    response = empty_client.get("/month-views")
+
+    assert response.status_code == 404
+
+
+def test_processing_time_in_month_views(client):
+    """Test that processing time is displayed on month-views page."""
+    response = client.get("/month-views")
+
+    assert response.status_code == 200
+    assert b"generated" in response.data.lower() or b"Page" in response.data
