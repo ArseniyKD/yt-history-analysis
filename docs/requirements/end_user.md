@@ -43,6 +43,12 @@ End user persona focuses on interaction with YouTube watch history data for anal
 - CRUD interface for managing groupings
 - Rationale: Many creators have multiple channels; users follow creators, not channels
 
+### Channel Info
+- View all the statistics for a channel.
+- Show per-month view history for a channel, and allow to see what videos were watched.
+- Consdier doing Top-N rewatched videos ordered by number of times rewatched.
+- Integrate with groups.
+
 ### Group Analytics
 - Top groups view (aggregated stats across grouped channels)
 - Per-channel stats within each group
