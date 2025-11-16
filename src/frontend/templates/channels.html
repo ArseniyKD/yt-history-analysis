@@ -1,24 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Watch History - Top Channels</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>YouTube Watch History - Top Channels</h1>
+{% extends "base.html" %}
 
-    <nav>
-        <a href="/">Overview</a>
-        <a href="/channels">Top Channels</a>
-        <a href="/years">Per-Year Analysis</a>
-        <a href="/year-channels">Per-Year Channels</a>
-        <a href="/temporal">Monthly Trends</a>
-        <a href="/month-views">Monthly Views</a>
-    </nav>
+{% block title %}YouTube Watch History - Top Channels{% endblock %}
 
-    <h2>Top Channels</h2>
+{% block heading %}YouTube Watch History - Top Channels{% endblock %}
+
+{% block content %}
+<h2>Top Channels</h2>
 
     <div class="controls">
         <form method="GET" action="/channels">
@@ -75,12 +62,7 @@
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-    <p>No channels to display.</p>
-    {% endif %}
-
-    <footer>
-        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
-    </footer>
-</body>
-</html>
+{% else %}
+<p>No channels to display.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}YouTube Watch History{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <h1>{% block heading %}YouTube Watch History{% endblock %}</h1>
+
+    <nav>
+        <a href="/">Overview</a>
+        <a href="/channels">Top Channels</a>
+        <a href="/years">Per-Year Analysis</a>
+        <a href="/year-channels">Per-Year Channels</a>
+        <a href="/temporal">Monthly Trends</a>
+        <a href="/month-views">Monthly Views</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <footer>
+        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

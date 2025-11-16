@@ -1,24 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Watch History - Views for {{ "%04d-%02d"|format(year, month) }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>YouTube Watch History - Views for {{ "%04d-%02d"|format(year, month) }}</h1>
+{% extends "base.html" %}
 
-    <nav>
-        <a href="/">Overview</a>
-        <a href="/channels">Top Channels</a>
-        <a href="/years">Per-Year Analysis</a>
-        <a href="/year-channels">Per-Year Channels</a>
-        <a href="/temporal">Monthly Trends</a>
-        <a href="/month-views">Monthly Views</a>
-    </nav>
+{% block title %}YouTube Watch History - Views for {{ "%04d-%02d"|format(year, month) }}{% endblock %}
 
-    <h2>Views in {{ "%04d-%02d"|format(year, month) }}</h2>
+{% block heading %}YouTube Watch History - Views for {{ "%04d-%02d"|format(year, month) }}{% endblock %}
+
+{% block content %}
+<h2>Views in {{ "%04d-%02d"|format(year, month) }}</h2>
 
     <div class="controls">
         <form method="GET" action="/month-views">
@@ -77,12 +64,7 @@
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-    <p>No views in {{ "%04d-%02d"|format(year, month) }}.</p>
-    {% endif %}
-
-    <footer>
-        <small>Page generated in {{ "%.3f"|format(processing_time) }}s</small>
-    </footer>
-</body>
-</html>
+{% else %}
+<p>No views in {{ "%04d-%02d"|format(year, month) }}.</p>
+{% endif %}
+{% endblock %}
